@@ -7,7 +7,7 @@ The original design motivation was to extract the BIOS-provided physical memory 
 
 **Note:** Python 3 is required. It has been designed for Python3, but it would not be difficult to convert to something Python2 compatible.
 
-Article here: 
+Article here: https://tribalchicken.com.au/dfir/converting-a-memory-image-from-raw-to-padded/ 
 
 ### Todo 
 * Automatically extract relevant dmesg entries, if present

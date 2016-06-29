@@ -21,6 +21,7 @@ parser.add_argument('--outfile', '-o', dest='outfile', help='Padded file to outp
 parser.add_argument('--iomem','-m',dest='iomemfile', help='Original /proc/iomem file', required=False)
 parser.add_argument('--pmap','-pm',dest='pmapfile', help='BIOS-provided physical memory map. Refer to README for formatting requirements', required=False)
 
+
 args = parser.parse_args()
 logging.basicConfig(format='%(asctime)s %(levelname)s:  %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p', level=logging.DEBUG)
 
@@ -142,15 +143,78 @@ def buildFile(input, output, fileStruct, sysEntries):
             sysEntries = sysEntries - 1
     logging.info("Padded file has been constructed. Happy analysing!")
 
+def chunkedRead(f, chunkSize=1024):
+    while True:
+        data = f.read(chunkSize)
+        pos = f.tell()
+        if not data:
+            break
+        yield data, pos
+
+def extractE820MemoryMap(inputFile):
+    """ WORK IN PROGRESS """
+    r1 = re.compile(b'BIOS-provided physical RAM map') #round1
+    r2 = re.compile(b'BIOS-e820') #round 2
+    r3 = re.compile(b"(BIOS-e820:\s)(.+)(0[xX][0-9a-fA-F]+)-(0[xX][0-9a-fA-F]+)]\s([a-zA-Z\s]+)") #round3
+    f = open(inputFile,'rb')
+
+    results = []
+
+    logging.info("Search round 1: locating data")
+
+    for piece, pos in chunkedRead(f):
+
+        r1Result = r1.search(piece)
+
+        if r1Result:
+            logging.info("Search round 2: validating data")
+            offset = ((pos-1024)+r1Result.end()) #reset file position
+            f.seek(offset)
+
+            round2Data = f.read(32)
+
+            r2Result = r2.search(round2Data)
+            if r2Result:
+                logging.info("Found possible map")
+                logging.info("Search round 3: collecting data")
+                mapPresent = True
+                while mapPresent:
+                    #reset
+                    logging.debug("Seeking to " + str(offset))
+                    f.seek(offset)
+                    round3Data = f.read(128)
+                    r3Result = r3.search(round3Data)
+                    if r3Result:
+                        #set next file position
+                        offset = offset+r3Result.end()
+                        results.append(r3Result.group(0).decode("ascii"))
+                        logging.debug("Added " + str(r3Result.group(0)) + " to memory map.")
+                    else:
+                        mapPresent = False
+                logging.info("Round 3 search complete. Possible memory map has been found.")
+                return results
+            logging.info("invalid map")
+
+
+
 if args.pmapfile is not None:
-    with open(args.mmapfile,'r') as f:
+    with open(args.pmapfile,'r') as f:
         mmap = f.readlines()
+        print(mmap)
         newFileStruct, sysEntries = createOutputStructure(mmap)
         buildFile(args.infile, args.outfile, newFileStruct, sysEntries)
 
 # Can these be combined into one?
-if args.iomemfile is not None:
+elif args.iomemfile is not None:
     with open(args.iomemfile,'r') as f:
         iomem = f.readlines()
         newFileStruct, sysEntries = createOutputStructure(iomem)
         buildFile(args.infile, args.outfile, newFileStruct, sysEntries)
+
+else:
+    extractedMap = extractE820MemoryMap(args.infile)
+    if extractedMap:
+        newFileStruct, sysEntries = createOutputStructure(extractedMap)
+        buildFile(args.infile, args.outfile, newFileStruct, sysEntries)
+    else:
+        logging.info("No map has been found in the file.")

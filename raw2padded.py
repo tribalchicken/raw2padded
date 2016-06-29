@@ -143,7 +143,7 @@ def buildFile(input, output, fileStruct, sysEntries):
     logging.info("Padded file has been constructed. Happy analysing!")
 
 if args.pmapfile is not None:
-    with open(args.mmapfile,'r') as f:
+    with open(args.pmapfile,'r') as f:
         mmap = f.readlines()
         newFileStruct, sysEntries = createOutputStructure(mmap)
         buildFile(args.infile, args.outfile, newFileStruct, sysEntries)

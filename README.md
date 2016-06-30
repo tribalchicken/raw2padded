@@ -1,4 +1,6 @@
 # raw2padded
+**Update:** Experimental functionality to automatically extract relevant dmesg entries. Simply run without an iomem file or physical memory map file.
+
 Automatically convert a raw Linux memory image to a more useful 'padded' image.
 
 This has been designed to work on images captured by LiME in the 'raw' format and convert to the 'padded' format, but it should work with any image which has been acquired by concatenating together the 'System RAM' areas.
@@ -10,7 +12,7 @@ The original design motivation was to extract the BIOS-provided physical memory 
 Article here: https://tribalchicken.com.au/dfir/converting-a-memory-image-from-raw-to-padded/ 
 
 ### Todo 
-* Automatically extract relevant dmesg entries, if present
+* ~~Automatically extract relevant dmesg entries, if present~~ Done!
 * Change number base to be consistent (either hex or dec - currently a combination of both is used)
 * General code cleanup / fixup
 

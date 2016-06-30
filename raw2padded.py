@@ -210,7 +210,6 @@ elif args.iomemfile is not None:
         iomem = f.readlines()
         newFileStruct, sysEntries = createOutputStructure(iomem)
         buildFile(args.infile, args.outfile, newFileStruct, sysEntries)
-<<<<<<< HEAD
 
 else:
     extractedMap = extractE820MemoryMap(args.infile)
@@ -219,5 +218,3 @@ else:
         buildFile(args.infile, args.outfile, newFileStruct, sysEntries)
     else:
         logging.info("No map has been found in the file.")
-=======
->>>>>>> f198bd6036c9807befdd9942274c5a18f4c82f94
